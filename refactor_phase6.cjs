@@ -1,0 +1,328 @@
+const fs = require('fs');
+const path = require('path');
+const srcDir = path.resolve(__dirname, 'src');
+
+// 1. Create InvestmentSnapshot for Dashboard
+const snapshotCode = `import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  usePortfolioSummary, 
+  useMarketSentiment, 
+  useRiskMetrics, 
+  useInvestmentInsights 
+} from '../../investments/hooks/useInvestments';
+import { Skeleton } from '../../../components/ui/Skeleton';
+import { Wallet, TrendingUp, Shield, Cpu, ChevronRight } from 'lucide-react';
+import { Badge } from '../../../components/ui/Badge';
+
+export const InvestmentSnapshot: React.FC = () => {
+  const { data: summary, isLoading: isLoadingSummary } = usePortfolioSummary();
+  const { data: sentiment, isLoading: isLoadingSentiment } = useMarketSentiment();
+  const { data: risk, isLoading: isLoadingRisk } = useRiskMetrics();
+  const { data: insights, isLoading: isLoadingInsights } = useInvestmentInsights();
+
+  const isLoading = isLoadingSummary || isLoadingSentiment || isLoadingRisk || isLoadingInsights;
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  const topInsight = insights?.[0];
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+          <Wallet className="w-5 h-5 text-indigo-600" />
+          Investment Intelligence
+        </h2>
+        <Link to="/app/investments" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+          Hub <ChevronRight className="w-4 h-4 ml-0.5" />
+        </Link>
+      </div>
+
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <p className="text-xs text-slate-500 font-medium mb-1">Portfolio Value</p>
+          <p className="text-lg font-bold text-slate-900">
+            \${summary?.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 font-medium mb-1">Today's P&L</p>
+          <p className={\`text-lg font-bold flex items-center gap-1 \${(summary?.todaysPnl || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'}\`}>
+            {(summary?.todaysPnl || 0) >= 0 ? <TrendingUp className="w-4 h-4" /> : null}
+            {(summary?.todaysPnl || 0) >= 0 ? '+' : ''}\${summary?.todaysPnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 font-medium mb-1 flex items-center gap-1">
+            <Shield className="w-3 h-3 text-slate-400" /> Risk Level
+          </p>
+          <Badge variant={risk?.riskLevel === 'Low' ? 'success' : risk?.riskLevel === 'High' ? 'error' : 'warning'}>
+            {risk?.riskLevel}
+          </Badge>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 font-medium mb-1 flex items-center gap-1">
+            <Cpu className="w-3 h-3 text-slate-400" /> Top Insight
+          </p>
+          {topInsight ? (
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-slate-900">{topInsight.ticker}</span>
+              <span className={\`text-xs font-semibold \${topInsight.analysis.overallSignal === 'Positive' ? 'text-emerald-600' : 'text-slate-500'}\`}>
+                {topInsight.analysis.overallSignal} ({topInsight.analysis.confidence}%)
+              </span>
+            </div>
+          ) : (
+            <span className="text-sm text-slate-500">None</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+`;
+const dashboardComponentsDir = path.join(srcDir, 'features/dashboard/components');
+if (!fs.existsSync(dashboardComponentsDir)) fs.mkdirSync(dashboardComponentsDir, { recursive: true });
+fs.writeFileSync(path.join(dashboardComponentsDir, 'InvestmentSnapshot.tsx'), snapshotCode);
+
+// 2. Inject Snapshot into Dashboard
+const dashPath = path.join(srcDir, 'pages/Dashboard.tsx');
+let dashContent = fs.readFileSync(dashPath, 'utf8');
+if (!dashContent.includes('InvestmentSnapshot')) {
+  dashContent = dashContent.replace(
+    "import { AIInsightCard } from '../features/dashboard/components/AIInsightCard';",
+    "import { AIInsightCard } from '../features/dashboard/components/AIInsightCard';\nimport { InvestmentSnapshot } from '../features/dashboard/components/InvestmentSnapshot';"
+  );
+  dashContent = dashContent.replace(
+    "{/* Transactions Section */}",
+    "{/* Investment Snapshot */}\n      <InvestmentSnapshot />\n\n      {/* Transactions Section */}"
+  );
+  fs.writeFileSync(dashPath, dashContent);
+}
+
+// 3. Rewrite InvestmentsOverview.tsx
+const hubPath = path.join(srcDir, 'pages/investments/InvestmentsOverview.tsx');
+const hubCode = `import { Link } from 'react-router-dom';
+import { 
+  usePortfolioSummary, 
+  usePositions,
+  useMarketSentiment,
+  useRiskMetrics,
+  useInvestmentInsights
+} from '../../features/investments/hooks/useInvestments';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { ErrorState } from '../../components/common/ErrorState';
+import { ChevronRight, Wallet, TrendingUp, TrendingDown, Globe, Shield, Lightbulb } from 'lucide-react';
+import { Badge } from '../../components/ui/Badge';
+
+export default function InvestmentsOverview() {
+  const { data: summary, isLoading: isLoadingSummary, isError: isErrorSummary, refetch: refetchSummary } = usePortfolioSummary();
+  const { data: positions, isLoading: isLoadingPositions } = usePositions();
+  const { data: sentiment, isLoading: isLoadingSentiment } = useMarketSentiment();
+  const { data: risk, isLoading: isLoadingRisk } = useRiskMetrics();
+  const { data: insights, isLoading: isLoadingInsights } = useInvestmentInsights();
+
+  const isLoading = isLoadingSummary || isLoadingPositions || isLoadingSentiment || isLoadingRisk || isLoadingInsights;
+  const isError = isErrorSummary; // primary error boundary
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (isError || !summary) {
+    return <ErrorState message="Failed to load investments hub." onRetry={refetchSummary} />;
+  }
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Investment Hub</h1>
+      </div>
+
+      {/* Portfolio Top Line */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2 mb-2 text-slate-500">
+            <Wallet className="w-4 h-4" />
+            <h2 className="text-sm font-medium">Total Value</h2>
+          </div>
+          <p className="text-2xl font-bold text-slate-900">\${summary.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2 mb-2 text-slate-500">
+            <TrendingUp className="w-4 h-4" />
+            <h2 className="text-sm font-medium">Total Invested</h2>
+          </div>
+          <p className="text-2xl font-bold text-slate-900">\${summary.totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2 mb-2 text-slate-500">
+            {summary.todaysPnl >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            <h2 className="text-sm font-medium">Today's P&L</h2>
+          </div>
+          <p className={\`text-2xl font-bold flex items-center gap-2 \${summary.todaysPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}\`}>
+            {summary.todaysPnl >= 0 ? '+' : ''}\${summary.todaysPnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2 mb-2 text-slate-500">
+            {summary.overallPnl >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            <h2 className="text-sm font-medium">Overall Return</h2>
+          </div>
+          <p className={\`text-2xl font-bold flex items-center gap-2 \${summary.overallPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}\`}>
+            {summary.overallPnl >= 0 ? '+' : ''}{summary.overallPnlPct.toFixed(2)}%
+          </p>
+        </div>
+      </div>
+
+      {/* Grid of Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Portfolio Snapshot */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-indigo-600" />
+              Portfolio Snapshot
+            </h3>
+            <Link to="/app/investments/portfolio" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+              View Portfolio <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          <div className="p-5 flex-1">
+            {positions && positions.length > 0 ? (
+              <div className="space-y-4">
+                {positions.slice(0, 3).map(pos => (
+                  <div key={pos.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-900">{pos.ticker}</p>
+                      <p className="text-xs text-slate-500">{pos.shares} shares</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-slate-900">\${pos.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                      <p className={\`text-xs font-medium \${pos.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}\`}>
+                        {pos.pnl >= 0 ? '+' : ''}{pos.pnlPct.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No active positions.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Market Intelligence */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <Globe className="w-4 h-4 text-indigo-600" />
+              Market Intelligence
+            </h3>
+            <Link to="/app/investments/market" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+              View Market <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          <div className="p-5 flex-1 flex flex-col justify-center gap-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600">Market Sentiment</span>
+              <span className={\`font-semibold \${sentiment?.score && sentiment.score >= 65 ? 'text-emerald-600' : sentiment?.score && sentiment.score <= 35 ? 'text-rose-600' : 'text-slate-700'}\`}>
+                {sentiment?.label || 'Neutral'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600">Volatility Index</span>
+              <span className="font-mono font-medium text-slate-900">{sentiment?.volatilityIndex.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Risk Snapshot */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-indigo-600" />
+              Risk Snapshot
+            </h3>
+            <Link to="/app/investments/risk" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+              View Risk <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          <div className="p-5 flex-1 flex flex-col justify-center gap-6">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600">Risk Level</span>
+              <Badge variant={risk?.riskLevel === 'Low' ? 'success' : risk?.riskLevel === 'High' ? 'error' : 'warning'}>
+                {risk?.riskLevel || 'Unknown'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600">Portfolio Beta</span>
+              <span className="font-mono font-medium text-slate-900">{risk?.beta.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600">Risk Score</span>
+              <span className="font-mono font-medium text-slate-900">{risk?.riskScore}/100</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Insights Snapshot */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-indigo-600" />
+              Investment Insights
+            </h3>
+            <Link to="/app/investments/insights" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+              View Insights <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          <div className="p-5 flex-1">
+            {insights && insights.length > 0 ? (
+              <div className="space-y-4">
+                {insights.slice(0, 2).map(insight => (
+                  <div key={insight.id} className="flex items-start justify-between">
+                    <div>
+                      <p className="font-mono font-bold text-slate-900">{insight.ticker}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 max-w-[200px] truncate">{insight.name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={\`text-sm font-semibold \${insight.analysis.overallSignal === 'Positive' ? 'text-emerald-600' : insight.analysis.overallSignal === 'Negative' ? 'text-rose-600' : 'text-slate-600'}\`}>
+                        {insight.analysis.overallSignal}
+                      </p>
+                      <p className="text-xs text-slate-500 font-medium">{insight.analysis.confidence}% conf</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No active insights.</p>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+`;
+fs.writeFileSync(hubPath, hubCode);
+
+console.log('Phase 6 completed successfully.');

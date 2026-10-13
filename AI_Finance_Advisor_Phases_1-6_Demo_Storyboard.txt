@@ -1,0 +1,72 @@
+# AI FINANCE ADVISOR - DEMO STORYBOARD & RECORDING CHECKLIST
+
+*Live screen recording to .mp4 is unavailable in the current environment. Please use this storyboard and checklist to record the demo locally.*
+
+## 1. PRE-RECORDING CHECKLIST
+[ ] Application is running locally (`npm run dev`)
+[ ] Browser is maximized and clean (no unnecessary tabs)
+[ ] URL `http://localhost:5173/app/dashboard` is loaded and ready
+[ ] Developer tools and terminal windows are hidden
+[ ] Screen recording software (e.g., OBS, QuickTime, or Snipping Tool) is ready to capture the browser window
+[ ] Microphone is tested and ready for narration
+[ ] Video duration target is 3-5 minutes
+
+## 2. APPLICATION VERIFICATION CHECKLIST
+[✓] PPT Created (AI_Finance_Advisor_Phases_1-6.pptx)
+[✓] PPT Exactly 5 Slides
+[✓] Application Runs (No crashes)
+[✓] Dashboard Loads
+[✓] Investment Hub Loads
+[✓] Portfolio Loads
+[✓] Market Loads
+[✓] Risk Loads
+[✓] Insights Loads
+[✓] Navigation works smoothly
+[✓] TradeFlow Modified: NO
+[✓] Phase 7 Started: NO
+
+---
+
+## 3. DEMO STORYBOARD & SCRIPT
+
+### 0:00–0:20 | The Dashboard
+*Action:* Start on the main dashboard (`/app/dashboard`).
+*Narration:* "This is the AI Finance Advisor, a financial management platform extended with investment intelligence capabilities."
+
+### 0:20–0:45 | Investment Snapshot
+*Action:* Scroll down to the Investment Snapshot section on the dashboard.
+*Narration:* "Investment intelligence is integrated into the main dashboard through a lightweight investment snapshot."
+
+### 0:45–1:10 | Investment Hub
+*Action:* Click on 'Investments' in the navigation menu (`/app/investments`). Pause and show the hub.
+*Narration:* "The Investment Hub consolidates portfolio, market, risk, and investment insights into one investment experience."
+
+### 1:10–1:40 | Portfolio
+*Action:* Click on 'Portfolio' in the sub-navigation (`/app/investments/portfolio`). Show portfolio KPIs, holdings, P&L, and allocation.
+*Narration:* "The portfolio experience adapts the useful PortfolioLedger concept from TradeFlow while using the Finance Advisor's own architecture and design system."
+
+### 1:40–2:10 | Market Intelligence
+*Action:* Click on 'Market' in the sub-navigation (`/app/investments/market`). Show market news, sentiment, and trend visualization.
+*Narration:* "Market Intelligence combines news, sentiment, and trend visualization. Random simulation behavior from the original prototype was removed."
+
+### 2:10–2:35 | Risk & Sentiment
+*Action:* Click on 'Risk' in the sub-navigation (`/app/investments/risk`). Hover over risk score, volatility, beta, exposure, and sentiment.
+*Narration:* "Risk and sentiment are presented together, with a reusable sentiment visualization shared across the investment experience."
+
+### 2:35–3:15 | Investment Insights
+*Action:* Click on 'Insights' in the sub-navigation (`/app/investments/insights`). Interact with the asset selector and show the reasoning and key considerations.
+*Narration:* "TradeFlow's DecisionMatrix concept was transformed into structured investment analysis, while OracleStream became a deterministic AI reasoning interface. These insights currently use deterministic mock data. They are not live LLM-generated financial recommendations."
+
+### 3:15–3:40 | Return to Dashboard
+*Action:* Navigate back to the Dashboard (`/app/dashboard`) and show the Investment Snapshot again.
+*Narration:* "The detailed investment experience remains separated from the main dashboard, while the dashboard provides a concise investment overview."
+
+### 3:40–4:10 | Architecture (PPT Slide 4)
+*Action:* Switch tab/window to show the Architecture slide in the PowerPoint presentation.
+*Narration:* "This architecture isolates the UI from the data implementation and allows the mock layer to eventually be replaced by a FastAPI backend and real financial and AI services."
+
+### 4:10–4:30 | Final Outcome (PPT Slide 5)
+*Action:* Switch to the Final Outcome slide in the PowerPoint.
+*Narration:* "Phases 1 through 6 are complete and validated. The next development stage will be backend and real-data integration."
+
+[End Recording]

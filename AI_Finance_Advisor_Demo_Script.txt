@@ -1,0 +1,52 @@
+# AI Finance Advisor - Live Demo Script (3-5 minutes)
+
+[Maximize browser window. Ensure /app/dashboard is loaded.]
+
+**PART 1 — Dashboard**
+*Action: Start on the main dashboard (`/app/dashboard`).*
+Narration: "This is the AI Finance Advisor. The original application provides the foundation for financial management, including dashboard analytics, transactions, goals, reports, and the AI Advisor."
+
+*Action: Scroll down to the Investment Snapshot section.*
+Narration: "Investment intelligence has now been integrated into the main dashboard through a lightweight investment snapshot."
+
+**PART 2 — Investment Hub**
+*Action: Click on 'Investments' in the navigation to go to `/app/investments`.*
+Narration: "The Investments section acts as the central hub for the investment experience."
+
+*Action: Briefly pan over the summary cards (portfolio metrics, holdings, sentiment, risk, insights).*
+Narration: "Instead of turning the main dashboard into a trading dashboard, detailed investment functionality is organized into its own module."
+
+**PART 3 — Portfolio**
+*Action: Click on 'Portfolio' in the sub-navigation (`/app/investments/portfolio`).*
+Narration: "The portfolio experience was adapted from the useful PortfolioLedger concept in the TradeFlow reference, but rebuilt using the Finance Advisor's own data architecture and design system."
+
+*Action: Pause and hover over Total Value, Today's P&L, and Holdings list.*
+
+**PART 4 — Market Intelligence**
+*Action: Click on 'Market' in the sub-navigation (`/app/investments/market`).*
+Narration: "Market Intelligence combines a news feed, market sentiment, and trend visualization. The previous random simulation behavior was removed, so the current frontend uses deterministic mock data."
+
+*Action: Slowly scroll through the news and trend visualization.*
+
+**PART 5 — Risk & Sentiment**
+*Action: Click on 'Risk' in the sub-navigation (`/app/investments/risk`).*
+Narration: "Risk and sentiment were consolidated into a dedicated analysis view. The sentiment gauge was extracted into a reusable component so it can be consistently used across the investment experience."
+
+*Action: Hover over the Risk Score, Volatility, Beta, and Sentiment Gauge.*
+
+**PART 6 — Investment Insights**
+*Action: Click on 'Insights' in the sub-navigation (`/app/investments/insights`).*
+Narration: "The final layer is Investment Insights. TradeFlow's DecisionMatrix concept became structured analysis factors, while the OracleStream concept became a deterministic AI reasoning interface."
+
+*Action: Click through an asset to show the analysis and confidence.*
+Narration: "These are currently structured mock insights, not live LLM-generated financial recommendations."
+
+**PART 7 — Architecture**
+*Action: Switch tab to show the Slide 4 Architecture diagram.*
+Narration: "All of these screens follow the same architecture: the UI consumes feature hooks, TanStack Query manages the data layer, API adapters isolate the frontend from the service implementation, and deterministic mock services currently provide the data. This means the mock layer can later be replaced by FastAPI and real financial or AI services without rebuilding the UI architecture."
+
+**PART 8 — Final Validation**
+*Action: Switch back to the application and navigate to the Dashboard.*
+Narration: "Phases 1 through 6 are now complete, the frontend is validated and demo-ready, and the next stage is backend and real data integration."
+
+[End Recording]
